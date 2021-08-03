@@ -1,0 +1,19 @@
+#!/bin/bash
+
+mkdir -p storage/framework/cache/data
+
+mkdir -p storage/framework/sessions
+
+mkdir -p storage/framework/views
+
+chmod -R 0777 storage/
+
+composer install
+
+cp .env.example .env
+
+php artisan key:generate
+
+php artisan migrate
+
+php artisan config:cache

@@ -1,0 +1,59 @@
+# Compose file version
+version: '1'
+
+# Services
+services:
+
+    # Database service
+    database:
+        image: mysql:5.7
+        container_name: database
+        tty: true
+        restart: unless-stopped
+        env_file: ./database/.env
+        ports:
+            - 3306:3306
+        volumes:
+            - database_data:/var/lib/mysql:delegated
+        networks:
+            - api-auth-network
+
+    # API Artigo service
+    api-artigo:
+        build:
+            context: ./api-artigo
+            args:
+                PHP_VERSION: '8.0-fpm'
+        container_name: api-artigo
+        depends_on:
+            - api-auth-webserver
+        restart: unless-stopped
+        volumes:
+            - ./:/var/www/html/:delegated
+        networks:
+            - api-artigo-network
+
+    # API Artigo server service
+    api-artigo-webserver:
+        image: nginx:1.20
+        container_name: api-artigo-webserver
+        depends_on:
+            - api-artigo
+        restart: always
+        ports:
+            - '8000:80'
+        volumes:
+            - ./:/var/www/html/:delegated
+            - ./nginx/conf.d/:/etc/nginx/conf.d/:delegated
+            - ./nginx/log/:/var/log/nginx/:delegated
+        networks:
+            - api-artigo-network
+# Networks
+networks:
+    api-artigo-network:
+        driver: bridge
+
+# Volumes
+volumes:
+    database_data:
+        driver: local
